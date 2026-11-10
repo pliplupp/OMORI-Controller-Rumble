@@ -13,6 +13,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - run: sudo apt-get install sdl3
     - name: make
       run: make
       
@@ -22,6 +23,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - run: choco install sdl3
     - name: make
       run: make
 
@@ -31,6 +33,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - run: brew install sdl3
     - name: make
       run: make
 
