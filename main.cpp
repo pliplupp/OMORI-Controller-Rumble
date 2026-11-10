@@ -30,8 +30,10 @@
     //#include <Xinput.h>
     #include <winsock2.h>
     #include <ws2tcpip.h>
-    //#pragma comment(lib, "Xinput9_1_0.lib")
+    #pragma comment(lib, "SDL3.lib")
     #pragma comment(lib, "ws2_32.lib")
+
+    #define closeSocket(x) closesocket(x)
 #else
     // Linux/Unix/POSIX headers
     // Used if target is Linux, MacOS, or just "not windows"
@@ -43,6 +45,9 @@
     #define SOCKET_ERROR -1
     #define Sleep(x) sleep(x)
 
+    // using "close()" as a macro on windows messes with c++ ofstream stuff 
+    #define closeSocket(x) close(x)
+
     // Defines Windows WORD and DWORD types 
     // i was too lazy to change these in the code
     #define WORD uint32_t
@@ -51,7 +56,7 @@
 
 // custom struct that replaces XINPUT_VIBRATION
 // SDL uses 16-bit integers for rumble intensity
-typedef struct omoControllerRumbleVibration {
+struct omoControllerRumbleVibration {
     uint16_t wLeftMotorSpeed;
     uint16_t wRightMotorSpeed;
 };
@@ -240,8 +245,8 @@ int main() {
         std::thread(ExecuteRumble, intensity, time, fade).detach();
     }
 
-    close(client); close(server); sock_cleanup();
-    if (logFile.is_open()) logFile.close();
+    closeSocket(client); closeSocket(server); sock_cleanup();
+    if (logFile.is_open()) logFile.std::ofstream::close();
     
     return 0;
 }
