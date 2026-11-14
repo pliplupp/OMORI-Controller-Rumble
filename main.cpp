@@ -27,7 +27,6 @@
     // Used if the target is... well, Windows
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
-    //#include <Xinput.h>
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #pragma comment(lib, "SDL3.lib")
@@ -76,6 +75,7 @@ SDL_Gamepad *gamepad = NULL;
 
 void ExecuteRumble(float intensity, int time, int fade) {
     abortRumble = false;
+    bool success;
     omoControllerRumbleVibration vibration;
 
     if (fade == 1 && time > 20) {
@@ -88,7 +88,7 @@ void ExecuteRumble(float intensity, int time, int fade) {
 
             float progress = (float)elapsed / (float)time;
             float currentIntensity = startIntensity * (1.0f - progress);
-            uint16_t motor = (uint16_t)(currentIntensity * 255.0f);
+            uint16_t motor = (uint16_t)(currentIntensity * (float)0xffff);
 
             vibration.wLeftMotorSpeed = motor;
             vibration.wRightMotorSpeed = motor;
@@ -97,10 +97,11 @@ void ExecuteRumble(float intensity, int time, int fade) {
             // Looking through this code, it seems like you intended each "tick" of controller rumble to last 10 ms
             // Because of this, I passed 10 as the time argument for controller rumble.
             // (yes, i know this comment sounds like it came from claude or something, i assure you no ai was used here)
-            if (!(SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10))) {
-                if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << std::flush;
+            success = SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10);
+            if (success == false) {
+                if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << "ERR: " << SDL_GetError() << "\n" << std::flush;
             }
-            SDL_UpdateJoysticks();
+            SDL_UpdateGamepads();
 
             Sleep(tickMs);
             elapsed += tickMs;
@@ -108,14 +109,15 @@ void ExecuteRumble(float intensity, int time, int fade) {
     }
     else {
         if (time > 0) {
-            uint16_t motor = (uint16_t)(intensity * 255.0f);
+            uint16_t motor = (uint16_t)(intensity * (float)0xffff);
             vibration.wLeftMotorSpeed = motor;
             vibration.wRightMotorSpeed = motor;
 
-            if (!(SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10))) {
-                if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << std::flush;
+            success = SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10);
+            if (success == false) {
+                if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << "ERR: " << SDL_GetError() << "\n" << std::flush;
             }
-            SDL_UpdateJoysticks();
+            SDL_UpdateGamepads();
 
             int ticks = time / 10;
             for (int i = 0; i < ticks; i++) {
@@ -127,10 +129,9 @@ void ExecuteRumble(float intensity, int time, int fade) {
 
     vibration.wLeftMotorSpeed = 0;
     vibration.wRightMotorSpeed = 0;
-    if (!(SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10))) {
-        if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << std::flush;
-    }
-    SDL_UpdateJoysticks();
+    // this just sets the rumble to zero
+    SDL_RumbleGamepad(gamepad, 0, 0, 10);
+    SDL_UpdateGamepads();
 }
 
 int main() {
@@ -145,30 +146,30 @@ int main() {
     // Allow the program to detect controller input in the background
     if (!(SDL_SetHintWithPriority(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1", SDL_HINT_OVERRIDE))) {
         if (logFile.is_open()) logFile << "[ERROR] SDL failed to set hint\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
 
     // SDL Init, with the "gamepad" flag
     if (!(SDL_Init(SDL_INIT_GAMEPAD))) {
         if (logFile.is_open()) logFile << "[ERROR] SDL Initialization failed\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
 
     // Checks if a gamepad is actually detected
     if (!SDL_HasGamepad()) {
         if (logFile.is_open()) logFile << "[ERROR] No gamepads detected on system.\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
 
     // gamepad connection, loops until gamepad event is detected
     // this is a failsafe in case some event is detected BEFORE the gamepad
-    while (!gamepad) {
+    for (int i = 0; i < 4; i++) {
         SDL_PollEvent(&sdlEvent);
         if (sdlEvent.type == SDL_EVENT_GAMEPAD_ADDED) {
             gamepad = SDL_OpenGamepad(sdlEvent.gdevice.which);
             if (!gamepad) {
                 if (logFile.is_open()) logFile << "[ERROR] Gamepad initialization failed. ID: " << (unsigned int)sdlEvent.gdevice.which << "\nERR: " << SDL_GetError() << "\n" << std::flush;
-                system("pause"); return 1;
+                exit(1); return 1;
             }
             else {
                 if (logFile.is_open()) logFile << "[HARDWARE] Controller Detected with ID: " << (unsigned int)sdlEvent.gdevice.which << "\n" << std::flush;
@@ -190,7 +191,7 @@ int main() {
    // WSA init replaced with sock_init() from sockets.h
     if (sock_init() != 0) {
         if (logFile.is_open()) logFile << "[ERROR] socket initialization failed.\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
 
     socket_t server = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -201,14 +202,14 @@ int main() {
 
     if (bind(server, (sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR || listen(server, 1) == SOCKET_ERROR) {
         if (logFile.is_open()) logFile << "[ERROR] Port 9002 bind/listen failed.\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
 
     if (logFile.is_open()) logFile << "[NETWORK] Operational! Waiting for OMORI process...\n" << std::flush;
     socket_t client = accept(server, NULL, NULL);
     if (client == INVALID_SOCKET) {
         if (logFile.is_open()) logFile << "[ERROR] Connection handshake failed.\n" << std::flush;
-        system("pause"); return 1;
+        exit(1); return 1;
     }
     if (logFile.is_open()) logFile << "[NETWORK] Connected! Tracking execution sequences...\n\n" << std::flush;
 
@@ -246,6 +247,7 @@ int main() {
     }
 
     closeSocket(client); closeSocket(server); sock_cleanup();
+    SDL_CloseGamepad(gamepad);
     if (logFile.is_open()) logFile.std::ofstream::close();
     
     return 0;
