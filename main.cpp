@@ -215,6 +215,19 @@ int main() {
 
     char buffer[128];
     while (true) {
+        SDL_PollEvent(&sdlEvent);
+        if (sdlEvent.type == SDL_EVENT_GAMEPAD_ADDED) {
+            gamepad = SDL_OpenGamepad(sdlEvent.gdevice.which);
+            logFile << "[HARDWARE] New Gamepad detected; connecting...\n" << std::flush;
+            if (!gamepad) {
+                if (logFile.is_open()) logFile << "[ERROR] Gamepad initialization failed. ID: " << (unsigned int)sdlEvent.gdevice.which << "\nERR: " << SDL_GetError() << "\n" << std::flush;
+                exit(1); return 1;
+            }
+            else {
+                if (logFile.is_open()) logFile << "[HARDWARE] Controller Detected with ID: " << (unsigned int)sdlEvent.gdevice.which << "\n" << std::flush;
+            };
+        }
+        
         int len = recv(client, buffer, sizeof(buffer) - 1, 0);
         if (len <= 0) {
             if (logFile.is_open()) logFile << "\n[NETWORK] Game disconnected.\n" << std::flush;
