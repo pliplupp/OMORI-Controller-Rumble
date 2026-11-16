@@ -11,10 +11,12 @@ ifeq ($(OS),Windows_NT)
 	EXE_EXTENSION := .exe
     # hacky workaround to get it to detect SDL headers for windows builds without having to install SDL a specific way
 	CXXFLAGS += -lSDL3 -lws2_32 -I./include
+	ZIP := tar.exe acvf
 else
 	UNAME_S := $(shell uname -s)
 	EXE_EXTENSION := 
 	CXXFLAGS += -lSDL3
+	ZIP:= zip -r
 
     # had to do random extra stuff for macos because the default compiler doesn't include headers from homebrew or macports packages
 	ifeq ($(UNAME_S),Darwin)
@@ -32,7 +34,7 @@ all: main.cpp
 	mkdir -p build
 	$(CXX) $^ -o build/RumbleBridge$(EXE_EXTENSION) $(CXXFLAGS)
 	cp -R "OMORI Mod/" build
-	cd build && zip -r rumble.zip ./rumble && cd ../
+	cd build && $(ZIP) rumble.zip ./rumble/
 	rm -rf build/rumble
 
 clean: 
