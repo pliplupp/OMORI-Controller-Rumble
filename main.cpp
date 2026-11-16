@@ -40,9 +40,14 @@
     #include <sys/socketvar.h>
     #include <sys/types.h>
 
-    // Aliases for windows library names
+    // Alias for winsock library name thing
     #define SOCKET_ERROR -1
-    #define Sleep(x) sleep(x)
+
+    // Apparently, the Linux/Unix sleep() function takes SECONDS, not milliseconds.
+    // This seems to be the root cause of most of the problems I had with timing.
+    // Thankfully, usleep() also exists, which takes microseconds.
+    // I can define a macro that converts milliseconds into microseconds, and passes them to usleep()
+    #define Sleep(x) usleep(x * 1000)
 
     // using "close()" as a macro on windows messes with c++ ofstream stuff 
     #define closeSocket(x) close(x)
