@@ -4,3 +4,7 @@ build/*
 /RumbleBridge
 RumbleBridge.vcxproj.user
 */.DS_Store
+.DS_Store
+a.out
+sdl_test.cpp
+bridge_log.txt

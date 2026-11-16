@@ -14,14 +14,10 @@ ifeq ($(OS),Windows_NT)
 else
 	UNAME_S := $(shell uname -s)
 	EXE_EXTENSION := 
-
-	ifeq ($(UNAME_S),Linux)
-		CXXFLAGS += -lSDL3
-	endif
+	CXXFLAGS += -lSDL3
 
     # had to do random extra stuff for macos because the default compiler doesn't include headers from homebrew or macports packages
 	ifeq ($(UNAME_S),Darwin)
-		CXXFLAGS += -lSDL3 
 		ifneq ("$(wildcard /opt/homebrew/include/SDL3)", "")
 			CXXFLAGS += -I /opt/homebrew/include
 		else
@@ -35,6 +31,7 @@ endif
 all: main.cpp 
 	mkdir -p build
 	$(CXX) $^ -o build/RumbleBridge$(EXE_EXTENSION) $(CXXFLAGS)
+	cp -R "OMORI Mod/" build
 
 clean: 
 	rm -rf build

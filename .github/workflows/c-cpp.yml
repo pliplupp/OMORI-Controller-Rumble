@@ -2,15 +2,13 @@ name: C/C++ CI
 
 on:
   push:
-    branches: [ "sdl" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "sdl" ]
+    branches: [ "main" ]
 
 jobs:
   build-linux:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - run: |
@@ -18,11 +16,14 @@ jobs:
         sudo apt-get install libsdl3-dev libsdl3-0 libsdl3-ttf0 libsdl3-tests libsdl3-ttf-dev libsdl3-image0 libsdl3-image-dev
     - name: make
       run: make
+    - name: upload
+      uses: actions/upload-artifact@v6.0.0     
+      with:
+        path: ${{github.workspace}}/build
+        name: "OmoControllerRumble-linux"
       
   build-win:
-
     runs-on: windows-latest
-
     steps:
     - uses: actions/checkout@v4
     - uses: msys2/setup-msys2@v2
@@ -35,14 +36,22 @@ jobs:
           mingw-w64-x86_64-gcc
     - name: make
       run: make CXX=x86_64-w64-mingw32-g++
+    - name: upload
+      uses: actions/upload-artifact@v6.0.0     
+      with:
+        path: ${{github.workspace}}/build
+        name: "OmoControllerRumble-windows"
 
   build-mac:
-
     runs-on: macos-latest
-
     steps:
     - uses: actions/checkout@v4
     - run: brew install sdl3
     - name: make
       run: make
+    - name: upload
+      uses: actions/upload-artifact@v6.0.0     
+      with:
+        path: ${{github.workspace}}/build
+        name: "OmoControllerRumble-mac"
 
