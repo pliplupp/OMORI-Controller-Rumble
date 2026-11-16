@@ -3,6 +3,8 @@
 
 PLATFORM_INCLUDE 	:=
 
+LIB_COPY 			:= Launch-Rumble.ps1
+
 # library path stuff
 CXXFLAGS += -L./dependencies 
 
@@ -11,6 +13,8 @@ ifeq ($(OS),Windows_NT)
 	EXE_EXTENSION := .exe
     # hacky workaround to get it to detect SDL headers for windows builds without having to install SDL a specific way
 	CXXFLAGS += -lSDL3 -lws2_32 -I./include
+	LIB_COPY += dependencies/*.dll
+	#LIB_COPY += Launch-Rumble.ps1
 else
 	UNAME_S := $(shell uname -s)
 	EXE_EXTENSION := 
@@ -32,6 +36,7 @@ all: main.cpp
 	mkdir -p build
 	$(CXX) $^ -o build/RumbleBridge$(EXE_EXTENSION) $(CXXFLAGS)
 	cp -R "OMORI Mod/" build
+	cp $(LIB_COPY) build
 
 clean: 
 	rm -rf build
