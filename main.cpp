@@ -53,13 +53,6 @@
     #define DWORD uint64_t
 #endif
 
-// custom struct that replaces XINPUT_VIBRATION
-// SDL uses 16-bit integers for rumble intensity
-struct omoControllerRumbleVibration {
-    uint16_t wLeftMotorSpeed;
-    uint16_t wRightMotorSpeed;
-};
-
 // Atomic flag to instantly kill active rumbles when a 0.00 command arrives
 std::atomic<bool> abortRumble(false);
 
@@ -76,7 +69,6 @@ SDL_Gamepad *gamepad = NULL;
 void ExecuteRumble(float intensity, int time, int fade) {
     abortRumble = false;
     bool success;
-    omoControllerRumbleVibration vibration;
 
     if (fade == 1 && time > 20) {
         int elapsed = 0;
@@ -90,14 +82,13 @@ void ExecuteRumble(float intensity, int time, int fade) {
             float currentIntensity = startIntensity * (1.0f - progress);
             uint16_t motor = (uint16_t)(currentIntensity * (float)0xffff);
 
-            vibration.wLeftMotorSpeed = motor;
-            vibration.wRightMotorSpeed = motor;
+
 
             // Unlike XInput's rumble system, SDL_RumbleGamepad takes a "time" argument (in ms)
             // Looking through this code, it seems like you intended each "tick" of controller rumble to last 10 ms
             // Because of this, I passed 10 as the time argument for controller rumble.
             // (yes, i know this comment sounds like it came from claude or something, i assure you no ai was used here)
-            success = SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10);
+            success = SDL_RumbleGamepad(gamepad, motor, motor, 10);
             if (success == false) {
                 if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << "ERR: " << SDL_GetError() << "\n" << std::flush;
             }
@@ -110,10 +101,8 @@ void ExecuteRumble(float intensity, int time, int fade) {
     else {
         if (time > 0) {
             uint16_t motor = (uint16_t)(intensity * (float)0xffff);
-            vibration.wLeftMotorSpeed = motor;
-            vibration.wRightMotorSpeed = motor;
 
-            success = SDL_RumbleGamepad(gamepad, vibration.wLeftMotorSpeed, vibration.wRightMotorSpeed, 10);
+            success = SDL_RumbleGamepad(gamepad, motor, motor, 10);
             if (success == false) {
                 if (logFile.is_open()) logFile << "[ERROR] Controller vibration returned error.\n" << "ERR: " << SDL_GetError() << "\n" << std::flush;
             }
@@ -127,8 +116,7 @@ void ExecuteRumble(float intensity, int time, int fade) {
         }
     }
 
-    vibration.wLeftMotorSpeed = 0;
-    vibration.wRightMotorSpeed = 0;
+
     // this just sets the rumble to zero
     SDL_RumbleGamepad(gamepad, 0, 0, 10);
     SDL_UpdateGamepads();
@@ -161,8 +149,7 @@ int main() {
         exit(1); return 1;
     }
 
-    // gamepad connection, loops until gamepad event is detected
-    // this is a failsafe in case some event is detected BEFORE the gamepad
+    // gamepad connection
     for (int i = 0; i < 4; i++) {
         SDL_PollEvent(&sdlEvent);
         if (sdlEvent.type == SDL_EVENT_GAMEPAD_ADDED) {
@@ -227,7 +214,7 @@ int main() {
                 if (logFile.is_open()) logFile << "[HARDWARE] Controller Detected with ID: " << (unsigned int)sdlEvent.gdevice.which << "\n" << std::flush;
             };
         }
-        
+
         int len = recv(client, buffer, sizeof(buffer) - 1, 0);
         if (len <= 0) {
             if (logFile.is_open()) logFile << "\n[NETWORK] Game disconnected.\n" << std::flush;
