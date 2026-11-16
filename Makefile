@@ -31,6 +31,9 @@ endif
 all: main.cpp 
 	mkdir -p build
 	$(CXX) $^ -o build/RumbleBridge$(EXE_EXTENSION) $(CXXFLAGS)
+	cp -R "OMORI Mod/" build
+	cd build && zip -r rumble.zip ./rumble && cd ../
+	rm -rf build/rumble
 
 clean: 
 	rm -rf build
