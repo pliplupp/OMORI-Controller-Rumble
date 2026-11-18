@@ -140,7 +140,7 @@ if (-not $PrepareOnly) {
         '        ___\//////////__\/////////__\/////////___\///___\///___\///___\/////////___\///__________ '
     )
 
-    $themeMap = @{
+    $themeMap = @{fass
         'og'          = "DarkCyan,DarkCyan,Cyan,Cyan,White,Magenta,White,Cyan,DarkCyan"
         'trans'       = "Cyan,Cyan,Magenta,Magenta,White,Magenta,Magenta,Cyan,Cyan"
         'nonbinary'   = "Yellow,Yellow,White,White,Magenta,Magenta,Magenta,DarkGray,DarkGray"

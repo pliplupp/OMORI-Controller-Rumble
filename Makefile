@@ -3,7 +3,7 @@
 
 PLATFORM_INCLUDE 	:=
 
-LIB_COPY 			:= Launch-Rumble.ps1
+LIB_COPY 			:= Launch-Rumble.ps1 quotes.txt config.txt start.bat LaunchRumble.sh
 
 # library path stuff
 CXXFLAGS += -L./dependencies 

@@ -10,7 +10,7 @@
 
 # Prints highly detailed background information to the console.
 # Useful for troubleshooting if the launcher isn't finding your game.
-Debug = false
+Debug = true
 
 # Automatically says "Yes" to all update prompts.
 # Great for launching the game directly from Steam!

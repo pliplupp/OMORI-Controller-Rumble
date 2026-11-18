@@ -1,4 +1,5 @@
-
+// just going to warn you: i probably went overboard with the amount of comments in this file
+// i just wanted to make sure you wouldn't look at this file and go "what was plip thinking here" if i wrote some weird code
 
 
 // Standard C/C++ includes
